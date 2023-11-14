@@ -1,0 +1,890 @@
+# prod
+# @endpoint = https://8jnrkj0xsi.execute-api.ap-northeast-1.amazonaws.com
+# dev
+# @endpoint = https://u8azswktf8.execute-api.ap-northeast-1.amazonaws.com
+# stg
+# @endpoint = https://gbrmvrsk82.execute-api.ap-northeast-1.amazonaws.com
+# local
+@endpoint = http://localhost:8080
+@baseAdminUrl = {{endpoint}}/admin
+@baseStoreUrl = {{endpoint}}/store
+
+# Running
+GET {{endpoint}}/health
+
+###
+GET {{endpoint}}/medusa-health
+
+###
+
+# User
+# @name register_token
+POST {{baseAdminUrl}}/users/register
+Accept: application/json
+Content-Type: application/json
+
+{
+  "email": "hai.do@pionero.io"
+}
+
+###
+@registerToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImhhaS5kb0BwaW9uZXJvLmlvIiwiZXhwIjoxNjY2NTQ1OTE3LCJpYXQiOjE2NjY1Mzk5MTd9.1hIFIigJBddAKygN5F8Y6Gz7aRz_bPNIeky8Iwpt5e0
+
+# @name check_register_token
+GET {{baseAdminUrl}}/users/register/{{registerToken}}
+Accept: application/json
+
+###
+# @name register
+POST  {{baseAdminUrl}}/users/register/{{registerToken}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "nickname": "haido",
+  "password": "12345678"
+}
+
+###
+GET {{baseAdminUrl}}/prefecture
+
+###
+GET {{baseAdminUrl}}/postcode/064-0941
+
+###
+GET {{baseAdminUrl}}/product-types
+  ?deep=3
+#   &parent_id=ptyp_01GH5CQE9P69KWKAQ8Y4W6VVYK
+  # &fields=rank,parent_id,value
+
+###
+GET {{baseAdminUrl}}/product-sizes
+  ?product_type_id[]=ptyp_01GH5CQE9P69KWKAQ8Y4W6VVYK
+  &product_type_id[]=ptyp_01GH5CQE9P69KWKAQ8Y4W6VVYX
+  # &fields=rank,parent_id,value
+
+###
+GET {{baseAdminUrl}}/myproduct-list-status
+?status=draft
+&limit=2
+&offset=1
+&order=id
+&title=Rice
+&expand=variants
+
+### Get products of a store
+GET {{baseAdminUrl}}/product-list-store
+?status=published
+&limit=4
+&offset=4
+&order=rank
+&store_id=store_01GNV9NAMQN5YNQYNG5G105ATT
+
+###
+GET {{baseAdminUrl}}/search/product-key
+
+###
+GET {{baseAdminUrl}}/search/health
+
+###
+# @name login
+POST {{baseAdminUrl}}/auth
+Accept: application/json
+Content-Type: application/json
+
+{
+   #   "email": "testwithdrawal_shop_standard+2@gmail.com",
+     "email": "admin@admin.com",
+     "password": "password"
+}
+
+###
+
+@authToken = {{login.response.body.$.user.jwt}}
+
+# # Profile
+GET {{baseAdminUrl}}/auth
+Authorization: Bearer {{authToken}}
+Accept: application/json
+Content-Type: application/json
+
+###
+DELETE  {{baseAdminUrl}}/auth
+# Authorization: Bearer {{authToken}}
+Accept: application/json
+Content-Type: application/json
+
+### get my product
+GET {{baseAdminUrl}}/myproduct/prod_01GK74JFTR0RA196Y54GGSDWFQ
+Accept: application/json
+Content-Type: application/json
+
+### draft product
+POST {{baseAdminUrl}}/products
+Accept: application/json
+Content-Type: application/json
+
+{
+  "title":"Test Draft",
+  "is_maker_ship":false,
+  "description":"",
+  "status":"draft",
+  "is_customizable":true,
+  "gift_cover":"none"
+}
+
+### publish product
+POST {{baseAdminUrl}}/products
+Accept: application/json
+Content-Type: application/json
+
+{
+   "gift_cover":"free",
+   "product_giftcovers":[
+      {
+         "name":"Nilong",
+         "price":0
+      }
+   ],
+   "product_addons":[
+      "prod_addon_01GM38A3NV4ZDF75GCGTHP852T"
+   ],
+   "shipping_options":[
+      {
+         "id":"so_01GM3873HC45DTZDC7NE07DBKW"
+      },
+      {
+         "id":"so_01GM387K0KD1JYWAMSM2A642ZK"
+      },
+      {
+         "id":"so_01GM38808C93B1KHVQ9YX78024"
+      },
+      {
+         "id":"so_01GM388BRWCE1Z5SSSGYSV3W6R"
+      },
+      {
+         "id":"so_01GM38930BYKEZQY11QPGRQ9NC"
+      }
+   ],
+   "variants":[
+      {
+         "inventory_quantity": 12,
+         "manage_inventory": true,
+         # "color":"Red",
+         # "size":"M",
+         "prices":[
+            {
+               "amount": 445
+            }
+         ]
+      },
+      {
+         "inventory_quantity": 0,
+         "manage_inventory": true,
+         # "color":"Red",
+         # "size":"M",
+         "prices":[
+            {
+               "amount": 334
+            }
+         ]
+      },
+       {
+         "inventory_quantity": 2,
+         "manage_inventory": false,
+         # "color":"Red",
+         # "size":"M",
+         "prices":[
+            {
+               "amount": 265
+            }
+         ]
+      },
+      {
+         "inventory_quantity": 0,
+         "manage_inventory": false,
+         # "color":"Red",
+         # "size":"M",
+         "prices":[
+            {
+               "amount": 465
+            }
+         ]
+      }
+      # {
+      #    "inventory_quantity":1200,
+      #    "manage_inventory":false,
+      #    "color":"Black",
+      #    "size":"M",
+      #    "prices":[
+      #       {
+      #          "amount":600
+      #       }
+      #    ]
+      # }
+   ],
+   "product_colors":[
+      "1",
+      "2"
+   ],
+   "ship_from_id":"pref_1",
+   "tags":[
+      {
+         "value":"rrxx"
+      },
+      {
+         "value":"swsssa"
+      }
+   ],
+   "material_id":"1",
+   "product_sizes":[
+      [
+         {
+            "name":"M",
+            "value":"M",
+            "is_free":false,
+            "size_id":"psize_01"
+         },
+         {
+            "name":"Width(cm)",
+            "value":"100",
+            "is_free":false,
+            "size_id":"psize_11"
+         }
+      ]
+   ],
+   "description":"技法/飾り方、使い方の提案/使用上の注意、お手入れ方法など、写真だけでは伝わらない作品の魅力を伝えましょう。",
+   "product_specs":[
+      {
+         "lv1_id":"1.4",
+         "lv2_content": "Luong Dao"
+      }
+   ],
+   "is_maker_ship":false,
+   "title":"Product test 35",
+   "images":[
+      "https://images.unsplash.com/photo-1670171336566-6f08f1fbf648?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&h=687&q=80",
+      "https://images.unsplash.com/photo-1670171882498-d04b80f562bd?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80&h=687"
+   ],
+   "status":"published",
+   "is_customizable":true,
+   "ship_after":"5",
+   "sizes_note":"※受注後に作品を制作される場合は、「受注後に制作される旨」と「納期」を記載してください。",
+   "type_id":"1.1.1"
+}
+
+# {
+#   "title": "Test product 14",
+#   "description": "Product 14 decs",
+#   "status": "published",
+#   "is_maker_ship": true,
+#   "is_maker_ship": true,
+#   "is_customizable": true,
+#   "ship_from_id": "pref_1",
+#   "gift_cover": "free",
+#   "ship_after": "3",
+#   "remarks": "hey you",
+#   "material_id": "prod_material_01GJJRD1G5NEN4JNP92J5JRGFP",
+#   "images": ["https://plus.unsplash.com/premium_photo-1665657351180-34854ce6878c?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=700&q=80&h=700", "https://images.unsplash.com/photo-1668800477238-0c701ec52be9?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=700&q=80&h=700"],
+#   "tags": [{ "value": "kw1" }, { "value": "kw2" }],
+#   "type_id": "ptyp_test_child",
+#   "product_colors": ["prod_color_01GJJRD1HXQ5Q485RDNY2NW4SE", "prod_color_01GJJRD1J189PH53VH0W3C95XQ"],
+#   "product_addons": ["prod_addon_01GJJS1E29CKG2ZKQ9SA8J12EJ", "prod_addon_01GJJS1ZW4K8D7H948TVPBP1EK"],
+#   "shipping_options": [ { "id": "so_01GJKJTF7DT5DBAYN4AJMJXXW1", "bulk_added_price": 100 }, { "id": "so_01GJKV1QXTART503P17SRJ9ZE7" } ],
+#   "product_giftcovers": [ { "thumbnail": "test.png", "name": "g1", "price": 100 }, { "name": "g2", "price": 0 } ],
+#   "product_specs": [ { "lv1_id": "specs_01GJJRD1MKVXH40N29CEJQDHJ6", "lv2_id": "specs_01GJJRD1MK3TCF1MHS4D8TB3P3" } ],
+#   "product_sizes": [
+#     [ {"size_id": "tessss", "name": "tessee", "value": "100", "is_free": true} ],
+#     [ {"size_id": "tessss 2", "name": "tessee 2", "value": "tee2", "is_free": false} ]
+#   ],
+#   "sizes_note": "test product_sizes sizes_note",
+#   "variants": [
+#     {
+#       "inventory_quantity": 60,
+#       "color": "White",
+#       "size": "S",
+#       "prices": [
+#         { "amount": 350 },
+#         { "amount": 300, "is_sale": true, "starts_at": "2022-11-11T03:26:47.726Z", "ends_at": "2022-12-11T03:26:47.726Z" }
+#       ]
+#     },
+#     {
+#       "inventory_quantity": 80,
+#       "color": "Blue",
+#       "size": "M",
+#       "prices": [
+#         { "amount": 1000 },
+#         { "amount": 850, "is_sale": true, "starts_at": "2022-11-11T03:26:47.726Z", "ends_at": "2022-12-11T03:26:47.726Z" }
+#       ]
+#     },
+#     {
+#       "inventory_quantity": 100,
+#       "color": "Red",
+#       "size": "L",
+#       "prices": [
+#         { "amount": 635 }
+#       ]
+#     },
+#     {
+#       "inventory_quantity": 150,
+#       "prices": [
+#         { "amount": 520 }
+#       ]
+#     },
+#     {
+#       "inventory_quantity": 0,
+#       "prices": [
+#         { "amount": 450 }
+#       ]
+#     }
+#   ]
+# }
+
+# {
+#   "title": "prod 1",
+#   "description": "prod 1 decs",
+#   "status": "published",
+#   "images": ["img1.png", "img2.png"],
+#   "variants": [
+#     {
+#       "color": "White",
+#       "size": "S",
+#       "quantity": 10,
+#       "allow_backorder": false
+#     }
+#   ],
+#   "type_id": "ptyp_01GH5CQECPSNZCT4F0R1C0JTHJ",
+#   "tags": ["kw1", "kw 2"],
+#   "is_maker_ship": true,
+#   "is_customizable": true,
+#   "ship_from_id": "pref_1",
+#   "gift_cover": "none",
+#   "ship_after": "1",
+#   "remarks": "hey you",
+#   "material_id": ""
+# }
+
+###
+GET {{baseStoreUrl}}/customers/me
+
+# @name login-cms
+###
+POST {{baseAdminUrl}}/auth/cms
+Accept: application/json
+Content-Type: application/json
+
+{
+     "email": "duong.nguyen@pionero.io",
+     "password": "12345678"
+}
+
+###
+GET {{baseAdminUrl}}/stores
+?expand=customer
+&limit=2
+&plan_type=standard
+
+@storeId = store_01G1G5V21KADXNGH29BJMAJ4B5
+
+###
+DELETE  {{baseAdminUrl}}/stores/{{storeId}}
+
+###
+GET {{baseAdminUrl}}/users
+?limit=20
+&offset=0
+&expand=customer
+
+###
+# @name batchCreate
+POST {{baseAdminUrl}}/batch-jobs
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+   "type": "promo-code-gen",
+   "context": {  },
+   "dry_run": false
+}
+
+###
+@jobId = {{batchCreate.response.body.$.batch_job.id}}
+POST {{baseAdminUrl}}/batch-jobs/{{jobId}}/confirm
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+###
+GET {{baseAdminUrl}}/batch-jobs/{{jobId}}
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+###
+GET {{baseAdminUrl}}/mystore/product-addon
+Accept: application/json
+Content-Type: application/json
+
+###
+GET {{baseAdminUrl}}/shipping-option
+Accept: application/json
+Content-Type: application/json
+
+###
+POST {{baseAdminUrl}}/search/reset
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+x-api-key: bw5K0lXj2qCk7FXIjkfDkghjzyDoYkQZ
+
+{
+    "clear_all": false
+}
+
+###
+GET {{baseAdminUrl}}/mystore/information
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+### Check user unread notification
+GET {{baseAdminUrl}}/notification/check-unread
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+### Auto sync address with user store detail
+POST  {{baseAdminUrl}}/customers/sync-address
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+x-api-key: bw5K0lXj2qCk7FXIjkfDkghjzyDoYkQZ
+
+### List transactions of a store
+GET {{baseAdminUrl}}/list-order-store
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+### List purchases of a buyer
+GET {{baseAdminUrl}}/list-order-buyer
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+### backdoor api to init point  => only call for the first time
+POST  {{baseAdminUrl}}/point/history/init
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+x-api-key: bw5K0lXj2qCk7FXIjkfDkghjzyDoYkQZ
+
+### backdoor api to fix review notification  => only call for the first time
+POST  {{baseAdminUrl}}/review/fix-message
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+x-api-key: bw5K0lXj2qCk7FXIjkfDkghjzyDoYkQZ
+
+### backdoor api to clear redis cache  
+POST  {{baseAdminUrl}}/cache/reset
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+x-api-key: bw5K0lXj2qCk7FXIjkfDkghjzyDoYkQZ
+
+{
+    "patterns": ["bull:cron-jobs*"]
+}
+
+### API sort product of my store
+POST  {{baseAdminUrl}}/products/sort
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+   "ids": ["prod_01GSJ3Y4BTZDSS8G3E3HAJ6GQK", "prod_01GSJ3DE61YR2SA542XEGTXNXQ", "prod_01GS9JDBX3TABDN9DWCWAKY4YJ"],
+   "type": "next",
+   "limit": 4,
+   "status": "published"
+}
+
+
+### API get sort product of my store
+GET  {{baseAdminUrl}}/myproducts/sort
+?status=published
+&limit=4
+&offset=92
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+### API check follow stores
+GET  {{baseAdminUrl}}/follow/check-follow
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+    "ids": ["store_01GMPVT12PCDEPSD4Y9R5CKYDX"]
+}
+
+### API get order detail reviews of an user
+
+GET  {{baseAdminUrl}}/review/order/store_01GNV9NAMQN5YNQYNG5G105ATT-order_01GSXZDKQHKP3CS5K1NQQF03WC
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+
+### Update review of an order
+PUT {{baseAdminUrl}}/review/order
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+    "order_id": "store_01GNV9NAMQN5YNQYNG5G105ATT-order_01GSXZDKQHKP3CS5K1NQQF03WC",
+    "product_reviews": [
+       {
+          "review_id": "prod_review_01GSXZJVX907JTBVMABSX9B46S",
+          "content": "Ok man update",
+          "rate": 4
+       }
+    ]
+}
+
+### Get reply of a review
+GET {{baseAdminUrl}}/review/reply/prod_review_01GSXZJVX907JTBVMABSX9B46S
+Accept: application/json
+Content-Type: application/json
+
+
+### Reply a review
+POST  {{baseAdminUrl}}/review/reply/prod_review_01GSXZJVX907JTBVMABSX9B46S
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+    "content": "Good morning man"
+}
+
+### Backdoor api: Add line item to reviews
+POST  {{baseAdminUrl}}/review/sync-line-item
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+x-api-key: bw5K0lXj2qCk7FXIjkfDkghjzyDoYkQZ
+
+### Add search history
+POST  {{baseStoreUrl}}/search-history
+Accept: application/json
+Content-Type: application/json
+
+{
+    "content": "Test 2",
+    "user_id": "usr_01GMB5RJ160AZJ1X8TGXC57SPV"
+}
+
+
+### Get list search history
+GET  {{baseStoreUrl}}/search-history
+?user_id=usr_01GMB5RJ160AZJ1X8TGXC57SPV
+
+### Backdoor api: Reset rank
+POST  {{baseAdminUrl}}/products/reset-rank
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+x-api-key: bw5K0lXj2qCk7FXIjkfDkghjzyDoYkQZ
+
+{
+    "type": "all"
+}
+
+### Get all variants of a product
+GET {{baseStoreUrl}}/variants/variant_01GTTPJBP5TRR034SJYYS8E588
+Authorization: Bearer {{authToken}}
+
+### Create inquiry with attachments
+POST {{baseAdminUrl}}/contact/inquiry
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+   "content": "kdmckdmckdm",
+   "email": "luong.dao@pionero.io",
+   "first_name": "kmk",
+   "first_name_kana": "mkm",
+   "last_name": "kmkm",
+   "last_name_kana": "mk",
+   "phone": "01234567",
+   "type": 9,
+   "attachments": [
+       {
+          "file_name": "test1.jpg",
+          "url": "product/store_01GNV9NAMQN5YNQYNG5G105ATT_c6372f90-54d2-4e0e-a59d-541bc6ff3fc8.jpg"
+       }
+   ]
+}
+
+### Get withdrawal reasons
+GET {{baseAdminUrl}}/users/withdrawal/reason
+?type=standard
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+
+### Get withdrawal reasons
+POST {{baseAdminUrl}}/users/withdrawal/check
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+
+### Create withdrawal
+POST {{baseAdminUrl}}/users/withdrawal
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+    "reasons": ["withdrawal_reason_01GWBH14K9ADZAG33VM6PSKT42"],
+    "note": "test shop standard +2"
+}
+
+### Backdoor api:Restore user from withdrawal
+POST  {{baseAdminUrl}}/users/withdrawal/restore
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+x-api-key: bw5K0lXj2qCk7FXIjkfDkghjzyDoYkQZ
+
+{
+    "user_id": "usr_01GWC5JYRJXM6EXPGV67Y3JGCG"
+}
+
+### Sanitize cart items
+POST {{baseStoreUrl}}/carts/cart_01GX30Q2MPGGC79894TQJ1X5DE/sanitize
+Accept: application/json
+Content-Type: application/json
+
+### Get my delivery request
+GET {{baseAdminUrl}}/delivery-request/dev_req_01GYVTETEMA6575T7SW37JQDB3
+# ?fields=id,store_id
+?expands=product,product.variants_pick,children,children.product,children.product.variants_pick
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+### Create delivery request
+POST {{baseAdminUrl}}/delivery-request
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+    "items": [
+       {
+          "status": "draft",
+          "shooting": 0,
+          "background_type": 0,
+          "suggested_price": 220,
+          "product": {
+             "title": "Test title 123",
+             "description": "Test description",
+             "product_specs": [
+                     {
+                        "lv1_id": "364",
+                        "lv2_id": "",
+                        "lv2_content": "kmmkm",
+                        "lv3_id": "",
+                        "lv3_content": "kmkm"
+                     }
+             ],
+             "tags": [
+                 {
+                   "value": "abc"
+                 }
+             ],
+             "product_colors": [],
+             "variants": [
+                  {
+                     "inventory_quantity": 45,
+                     "color": "1",
+                     "size": "1",
+                     "threshold_quantity": 10,
+                     "restocking_responsive": true
+                  },
+                  {
+                     "inventory_quantity": 80,
+                     "color": "2",
+                     "size": "2",
+                     "threshold_quantity": 20,
+                     "restocking_responsive": false
+                  }
+             ],
+             "type_id": "1.1.1"
+          }
+       },
+       {
+          "status": "draft",
+          "shooting": 0,
+          "background_type": 0,
+          "suggested_price": 150,
+          "product": {
+             "title": "Test title 456",
+             "description": "Test description",
+             "product_specs": [
+                     {
+                        "lv1_id": "364",
+                        "lv2_id": "",
+                        "lv2_content": "kmmkm",
+                        "lv3_id": "",
+                        "lv3_content": "kmkm"
+                     }
+             ],
+             "tags": [
+                 {
+                   "value": "abc"
+                 }
+             ],
+             "product_colors": [],
+             "variants": [
+                  {
+                     "inventory_quantity": 52,
+                     "color": "1",
+                     "size": "1",
+                     "threshold_quantity": 10,
+                     "restocking_responsive": true
+                  },
+                  {
+                     "inventory_quantity": 90,
+                     "color": "2",
+                     "size": "2",
+                     "threshold_quantity": 20,
+                     "restocking_responsive": false
+                  }
+             ],
+             "type_id": "1.1.1"
+          }
+       }
+    ]
+}
+
+### Get delivery request list
+GET {{baseAdminUrl}}/delivery-requests
+# ?status=draft
+# &offset=18
+# ?q=uppercase
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+### Add stock delivery request
+POST {{baseAdminUrl}}/delivery-request/add-stock
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+   "delivery_request_id": "dev_req_01GXXJC9HH341AB1AGXTEWJYGN",
+   "status": "pending",
+   "product": {
+      "id": "prod_01GXXJCA2WWDCEKC2KSAJ2V331",
+      "variants": [
+         { 
+            "id": "variant_01GXXJCA8B70GG1ZXJWX8V5EPC",
+            "inventory_quantity": 25
+         },
+         {
+            "id": "variant_01GXXJCA8C8R6PNJ8DFGZBM2ZG",
+            "inventory_quantity": 55
+         }
+      ]
+   }
+}
+
+### Cancel delivery request
+POST {{baseAdminUrl}}/delivery-request/cancel/dev_req_01GY1PJRXVDSFH00Q3EF6SKEFZ
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+### Get my delivered products
+GET {{baseAdminUrl}}/delivery-requests/products
+# ?status=draft
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+
+### Update a draft delivery request
+PUT {{baseAdminUrl}}/delivery-request/dev_req_01GY1PJRXVDSFH00Q3EF6SKEFZ
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "suggested_price": 226,
+  "shooting": 1,
+  "background_type": 1,
+  "metadata": {
+    "foo": "bar"
+  },
+  "status": "pending",
+  "product": {
+    "title": "Test title 1234",
+    "type_id": "1.1.2",
+    "description": "abc",
+    "product_specs": [
+                     {
+                        "lv1_id": "364",
+                        "lv2_id": "",
+                        "lv2_content": "content lv2",
+                        "lv3_id": "",
+                        "lv3_content": "content lv3"
+                     },
+                     {
+                        "lv1_id": "364",
+                        "lv2_id": "",
+                        "lv2_content": "content lv2 2",
+                        "lv3_id": "",
+                        "lv3_content": "content lv3 2"
+                     }
+    ],
+    "variants": [
+         {
+              "inventory_quantity": 46,
+                     "color": "1 update dd",
+                     "size": "1 update ddcd",
+                     "threshold_quantity": 12,
+                     "restocking_responsive": false
+         }
+    ]
+    }
+}
+
+
+###
+GET {{baseAdminUrl}}/orders/order_01GMG88M8NTA2QPXFVRYPJFH75
+# ?status=draft
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+
+###
+GET {{baseAdminUrl}}/admin/get-product-name/cms
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+   "display_id": 1
+}

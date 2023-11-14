@@ -1,0 +1,12 @@
+**/node_modules/*
+**/out/*
+**/.next/*
+**/.vscode/*
+**/.idea/*
+**/.idea/*
+**/.vscode/*
+**/dist/*
+**/docker_data/*
+**/coverage/*
+**/client-sdk/*
+**/gmo_sdk/*

@@ -1,0 +1,189 @@
+image: docker:stable
+
+variables:
+  # ecs
+  SERVICE_NAME: api-ec
+  # dev
+  ECR_URI_DEV: 979924703687.dkr.ecr.ap-northeast-1.amazonaws.com/tsunaguma-development/api/api-ec
+  TASK_DEFINTION_NAME_DEV: tsunaguma-development-api-ec
+  CLUSTER_NAME_DEV: tsunaguma-development-api
+  # staging
+  ECR_URI_STG: 979924703687.dkr.ecr.ap-northeast-1.amazonaws.com/tsunaguma-staging/api/api-ec
+  TASK_DEFINTION_NAME_STG: tsunaguma-staging-api-ec
+  CLUSTER_NAME_STG: tsunaguma-staging-api
+  # prod
+  ECR_URI_PROD: 979924703687.dkr.ecr.ap-northeast-1.amazonaws.com/tsunaguma-production/api/api-ec
+  TASK_DEFINTION_NAME_PROD: tsunaguma-production-api-ec
+  CLUSTER_NAME_PROD: tsunaguma-production-api
+stages:
+  - build
+  - deploy
+
+build_dev:
+  stage: build
+  services:
+    - docker:dind
+  before_script:
+    - apk add --no-cache py-pip make build-base
+    - pip install awscli
+    - aws --version
+    - docker --version
+    - IMAGE_LATEST="${ECR_URI_DEV}:latest"
+    - IMAGE_TAG="${ECR_URI_DEV}:v-$(echo $CI_BUILD_BEFORE_SHA | head -c 8)"
+    - aws ecr get-login-password | docker login --username AWS --password-stdin $ECR_URI_DEV
+    - echo $IMAGE_TAG
+    - echo $IMAGE_LATEST
+
+  script:
+    - docker build --pull -t $IMAGE_LATEST .
+    - echo "Tagging image..."
+    - docker tag $IMAGE_LATEST $IMAGE_TAG
+    - echo "Pushing image..."
+    - docker push $IMAGE_LATEST
+    - docker push $IMAGE_TAG
+  # when: manual
+  allow_failure: false
+  only:
+    - main
+  except:
+    - production
+    - staging
+
+deploy_dev:
+  stage: deploy
+  before_script:
+    - apk add --no-cache curl jq python3 py3-pip
+    - pip install awscli
+    - IMAGE_TAG="${ECR_URI_DEV}:v-$(echo $CI_BUILD_BEFORE_SHA | head -c 8)"
+    - echo $IMAGE_TAG
+    - export TASK_DEFINTION_NAME=$TASK_DEFINTION_NAME_DEV
+    - echo $TASK_DEFINTION_NAME
+    - export LC_ALL="C.UTF-8"
+    - export LANG="C.UTF-8"
+    - export LANGUAGE="C.UTF-8"
+
+  script:
+    - TASK_DEFINITION=$(aws ecs describe-task-definition --task-definition "$TASK_DEFINTION_NAME")
+    - NEW_CONTAINER_DEFINTIION=$(echo $TASK_DEFINITION | jq --arg IMAGE "$IMAGE_TAG" '.taskDefinition | .containerDefinitions[0].image = $IMAGE | del(.taskDefinitionArn) | del(.revision) | del(.status) | del(.requiresAttributes) | del(.compatibilities) | del(.registeredAt) | del(.registeredBy)')
+    - echo $NEW_CONTAINER_DEFINTIION
+    - aws ecs register-task-definition --cli-input-json "$NEW_CONTAINER_DEFINTIION"
+    - aws ecs update-service --cluster "${CLUSTER_NAME_DEV}" --service "${SERVICE_NAME}" --task-definition "${TASK_DEFINTION_NAME}"
+    - sh -x ./scripts/deregister_old_task_definition.sh
+  only:
+    - main
+  except:
+    - production
+    - staging
+
+build_stg:
+  stage: build
+  services:
+    - docker:dind
+  before_script:
+    - apk add --no-cache curl jq python3 py3-pip
+    - pip install awscli
+    - aws --version
+    - docker --version
+    - IMAGE_LATEST="${ECR_URI_STG}:latest"
+    - IMAGE_TAG="${ECR_URI_STG}:v-$(echo $CI_BUILD_BEFORE_SHA | head -c 8)"
+    - aws ecr get-login-password | docker login --username AWS --password-stdin $ECR_URI_STG
+    - echo $IMAGE_TAG
+    - echo $IMAGE_LATEST
+
+  script:
+    - docker build --pull -t $IMAGE_LATEST .
+    - echo "Tagging image..."
+    - docker tag $IMAGE_LATEST $IMAGE_TAG
+    - echo "Pushing image..."
+    - docker push $IMAGE_LATEST
+    - docker push $IMAGE_TAG
+  # when: manual
+  allow_failure: false
+  only:
+    - staging
+  except:
+    - main
+    - production
+
+deploy_stg:
+  stage: deploy
+  before_script:
+    - apk add --no-cache curl jq python3 py3-pip
+    - pip install awscli
+    - IMAGE_TAG="${ECR_URI_STG}:v-$(echo $CI_BUILD_BEFORE_SHA | head -c 8)"
+    - echo $IMAGE_TAG
+    - export TASK_DEFINTION_NAME=$TASK_DEFINTION_NAME_STG
+    - echo $TASK_DEFINTION_NAME
+    - export LC_ALL="C.UTF-8"
+    - export LANG="C.UTF-8"
+    - export LANGUAGE="C.UTF-8"
+
+  script:
+    - TASK_DEFINITION=$(aws ecs describe-task-definition --task-definition "$TASK_DEFINTION_NAME")
+    - NEW_CONTAINER_DEFINTIION=$(echo $TASK_DEFINITION | jq --arg IMAGE "$IMAGE_TAG" '.taskDefinition | .containerDefinitions[0].image = $IMAGE | del(.taskDefinitionArn) | del(.revision) | del(.status) | del(.requiresAttributes) | del(.compatibilities) | del(.registeredAt) | del(.registeredBy)')
+    - echo $NEW_CONTAINER_DEFINTIION
+    - aws ecs register-task-definition --cli-input-json "$NEW_CONTAINER_DEFINTIION"
+    - aws ecs update-service --cluster "${CLUSTER_NAME_STG}" --service "${SERVICE_NAME}" --task-definition "${TASK_DEFINTION_NAME}"
+    # - sh -x ./scripts/deregister_old_task_definition.sh
+  only:
+    - staging
+  except:
+    - main
+    - production
+
+build_prod:
+  stage: build
+  services:
+    - docker:dind
+  before_script:
+    - apk add --no-cache curl jq python3 py3-pip
+    - pip install awscli
+    - aws --version
+    - docker --version
+    - IMAGE_LATEST="${ECR_URI_PROD}:latest"
+    - IMAGE_TAG="${ECR_URI_PROD}:v-$(echo $CI_BUILD_BEFORE_SHA | head -c 8)"
+    - aws ecr get-login-password | docker login --username AWS --password-stdin $ECR_URI_PROD
+    - echo $IMAGE_TAG
+    - echo $IMAGE_LATEST
+
+  script:
+    - docker build --pull -t $IMAGE_LATEST .
+    - echo "Tagging image..."
+    - docker tag $IMAGE_LATEST $IMAGE_TAG
+    - echo "Pushing image..."
+    - docker push $IMAGE_LATEST
+    - docker push $IMAGE_TAG
+  # when: manual
+  allow_failure: false
+  only:
+    - production
+  except:
+    - main
+    - staging
+
+deploy_prod:
+  stage: deploy
+  before_script:
+    - apk add --no-cache curl jq python3 py3-pip
+    - pip install awscli
+    - IMAGE_TAG="${ECR_URI_PROD}:v-$(echo $CI_BUILD_BEFORE_SHA | head -c 8)"
+    - echo $IMAGE_TAG
+    - export TASK_DEFINTION_NAME=$TASK_DEFINTION_NAME_PROD
+    - echo $TASK_DEFINTION_NAME
+    - export LC_ALL="C.UTF-8"
+    - export LANG="C.UTF-8"
+    - export LANGUAGE="C.UTF-8"
+
+  script:
+    - TASK_DEFINITION=$(aws ecs describe-task-definition --task-definition "$TASK_DEFINTION_NAME")
+    - NEW_CONTAINER_DEFINTIION=$(echo $TASK_DEFINITION | jq --arg IMAGE "$IMAGE_TAG" '.taskDefinition | .containerDefinitions[0].image = $IMAGE | del(.taskDefinitionArn) | del(.revision) | del(.status) | del(.requiresAttributes) | del(.compatibilities) | del(.registeredAt) | del(.registeredBy)')
+    - echo $NEW_CONTAINER_DEFINTIION
+    - aws ecs register-task-definition --cli-input-json "$NEW_CONTAINER_DEFINTIION"
+    - aws ecs update-service --cluster "${CLUSTER_NAME_PROD}" --service "${SERVICE_NAME}" --task-definition "${TASK_DEFINTION_NAME}"
+    # - sh -x ./scripts/deregister_old_task_definition.sh
+  when: manual
+  only:
+    - production
+  except:
+    - main
+    - staging

@@ -1,0 +1,53 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:14
+    ports:
+      - '5432:5432' # host:container
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: medusa-docker
+    volumes:
+      - ./docker_data/postgres:/var/lib/postgresql/data
+      - ./docker_data/postgres_sql:/home/postgres_sql
+
+  redis:
+    image: redis
+    ports:
+      - '6379:6379'
+  localstack:
+    image: localstack/localstack:latest
+    ports:
+      - '4566:4566'
+      - '4510-4559:4510-4559'
+    environment:
+      - SERVICES=s3,sns,sqs,ses
+      - AWS_DEFAULT_REGION=ap-northeast-1
+      - SERVICE_ACCESS_KEY=AKIAIOSFODNN7EXAMPLE
+      - SERVICE_SECRET_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+      - DATA_DIR=/tmp/localstack/data
+      - EXTRA_CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001
+      - LEGACY_DIRECTORIES=1
+    volumes:
+      - ./docker_data/localstack:/tmp/localstack
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - '8080:80'
+      - '8443:443'
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    volumes:
+      - ./docker_data/nginx:/var/www
+      - ./nginx-conf/:/etc/nginx/conf.d/
+  meilisearch:
+    image: getmeili/meilisearch:v0.30
+    ports:
+      - '7700:7700' # host:container
+    container_name: meilisearch
+    volumes:
+      - ./docker_data/meilisearch/data.ms:/data.ms
+    environment:
+      MEILI_MASTER_KEY: meilisearch-masterkey
